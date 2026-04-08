@@ -1,0 +1,9 @@
+{
+  "rewrites": [
+    { "source": "/", "destination": "/public/index.html" },
+    { "source": "/app.js", "destination": "/public/app.js" },
+    { "source": "/storage.js", "destination": "/public/storage.js" },
+    { "source": "/charts.js", "destination": "/public/charts.js" },
+    { "source": "/(.*)", "destination": "/public/$1" }
+  ]
+}
