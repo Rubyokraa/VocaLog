@@ -14,7 +14,7 @@ from urllib.request import Request, urlopen
 
 ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
 PUBLIC_DIR = os.path.join(ROOT_DIR, "public")
-CUSTOM_LOGO_PATH = "/Users/apple/.cursor/projects/Users-apple-Documents/assets/__2026-04-08_17.06.47-17bac394-b213-4cb5-b1f2-a97a3e41e23a.png"
+CUSTOM_LOGO_PATH = os.path.join(PUBLIC_DIR, "logo-custom.png")
 DB_PATH = os.path.join(ROOT_DIR, "vocalog.db")
 SESSION_TTL_SECONDS = 60 * 60 * 24 * 30  # 30 days
 
