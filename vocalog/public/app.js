@@ -21,6 +21,7 @@ import { formatHours, groupDurationMs, computeBreakdown, renderBarChart } from "
 const el = (id) => document.getElementById(id);
 const AUTH_TOKEN_KEY = "vocalog:authToken";
 const AUTH_EMAIL_KEY = "vocalog:authEmail";
+let backendAvailable = true;
 
 const state = loadState();
 
@@ -156,10 +157,21 @@ function renderCloudAuthUi() {
   el("logoutBtn")?.classList.toggle("hidden", !loggedIn);
   el("cloudPullBtn")?.classList.toggle("hidden", !loggedIn);
   el("cloudPushBtn")?.classList.toggle("hidden", !loggedIn);
+  if (!backendAvailable) {
+    el("signupBtn")?.classList.add("hidden");
+    el("loginBtn")?.classList.add("hidden");
+    el("logoutBtn")?.classList.add("hidden");
+    el("cloudPullBtn")?.classList.add("hidden");
+    el("cloudPushBtn")?.classList.add("hidden");
+  }
 
   const pill = el("cloudStatusPill");
   if (!pill) return;
-  pill.textContent = loggedIn ? `cloud: ${email || "signed in"}` : "cloud: guest";
+  if (!backendAvailable) {
+    pill.textContent = "cloud: unavailable";
+  } else {
+    pill.textContent = loggedIn ? `cloud: ${email || "signed in"}` : "cloud: guest";
+  }
 }
 
 function renderCollectionsSelect() {
@@ -454,9 +466,24 @@ async function importLink() {
   el("importPreviewWrap").classList.add("hidden");
 
   try {
-    const resp = await fetch(`/api/metadata?url=${encodeURIComponent(url)}`);
-    const data = await resp.json();
-    if (!resp.ok) throw new Error(data?.error || "Failed to fetch metadata");
+    let data = null;
+    try {
+      const resp = await fetch(`/api/metadata?url=${encodeURIComponent(url)}`);
+      const json = await resp.json();
+      if (!resp.ok) throw new Error(json?.error || "Failed to fetch metadata");
+      data = json;
+    } catch {
+      // Static-host fallback (e.g. GitHub Pages): derive from URL/title heuristics only.
+      data = {
+        url,
+        title: url,
+        platform: derivePlatformFallback(url),
+        authorName: "",
+        authorKey: "unknown",
+        audioUrl: "",
+      };
+      el("importStatus").textContent = "Metadata API unavailable. Using URL fallback.";
+    }
 
     let title = data.title || url;
     let platform = data.platform || "Other";
@@ -499,7 +526,8 @@ async function importLink() {
       tags,
     });
 
-    el("importStatus").textContent = data.warning ? `Imported with warning: ${data.warning}` : "Ready.";
+    if (data.warning) el("importStatus").textContent = `Imported with warning: ${data.warning}`;
+    else if (!el("importStatus").textContent) el("importStatus").textContent = "Ready.";
     el("importPreviewWrap").classList.remove("hidden");
   } catch (e) {
     el("importStatus").textContent = `Error: ${e?.message || String(e)}`;
@@ -1333,6 +1361,7 @@ function importBackupFile(file) {
 }
 
 async function apiRequest(path, { method = "GET", body = null, auth = true } = {}) {
+  if (!backendAvailable) throw new Error("Backend unavailable");
   const headers = { "Content-Type": "application/json" };
   if (auth && getAuthToken()) headers.Authorization = `Bearer ${getAuthToken()}`;
   const resp = await fetch(path, {
@@ -1471,6 +1500,18 @@ function hydrateInitialUI() {
 
   // Feedback due modal
   maybeOpenDueFeedbackOnLoad();
+  detectBackendAvailability();
+}
+
+async function detectBackendAvailability() {
+  try {
+    // Any /api endpoint existence is enough.
+    const r = await fetch("/api/auth/me", { method: "GET" });
+    backendAvailable = r.status !== 404;
+  } catch {
+    backendAvailable = false;
+  }
+  renderCloudAuthUi();
 }
 
 initFeedbackModalBindings();

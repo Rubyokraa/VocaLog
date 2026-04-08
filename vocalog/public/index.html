@@ -10,23 +10,19 @@
   <body class="bg-[#070707] text-neutral-200">
     <div class="min-h-screen">
       <header class="px-4 sm:px-8 pt-8 pb-6">
-        <div class="max-w-5xl mx-auto flex items-start justify-between gap-6">
+        <div class="max-w-5xl mx-auto flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 sm:gap-6">
           <div>
             <h1 class="text-2xl sm:text-3xl tracking-tight">
-              <img
-                src="/logo-custom.png"
-                alt="VocaLog"
-                class="h-9 sm:h-11 w-auto object-contain"
-                onerror="this.style.display='none';document.getElementById('logoFallbackText')?.classList.remove('hidden');"
-              />
-              <span id="logoFallbackText" class="hidden">VocaLog</span>
+              <span id="logoFallbackText" class="inline-flex items-center gap-0.5 font-semibold">
+                <span>VocaL</span><span class="translate-y-[1px]">♡</span><span>g</span>
+              </span>
             </h1>
             <p class="mt-2 text-sm sm:text-base text-neutral-400 max-w-xl">
               Close your eyes and breathe slow.<br />
               Have a beautiful listening time.
             </p>
           </div>
-          <div class="flex flex-wrap items-center justify-end gap-2">
+          <div class="flex flex-wrap items-center gap-2 sm:justify-end">
             <span id="statusPill" class="px-3 py-1 rounded-full border border-neutral-800 text-xs text-neutral-400">
               offline-first
             </span>
