@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VocaLog</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="color-scheme" content="dark" />
+    <style>
+      /* Tab strip: AO3-like — active = bottom bar + surface; inactive = quiet */
+      .tabBtn {
+        font-size: 0.75rem;
+        line-height: 1.25rem;
+        padding: 0.625rem 0.75rem;
+        margin-bottom: -1px;
+        border-top-left-radius: 0.375rem;
+        border-top-right-radius: 0.375rem;
+        transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+      }
+      @media (min-width: 640px) {
+        .tabBtn {
+          font-size: 0.875rem;
+          padding-left: 1rem;
+          padding-right: 1rem;
+        }
+      }
+      .tabBtn:focus {
+        outline: none;
+      }
+      .tabBtn:focus-visible {
+        box-shadow: 0 0 0 2px #070707, 0 0 0 4px #737373;
+      }
+      .tabBtn--inactive {
+        border-bottom: 2px solid transparent;
+        color: #737373;
+      }
+      .tabBtn--inactive:hover {
+        color: #d4d4d4;
+        background-color: rgba(23, 23, 23, 0.25);
+      }
+      .tabBtn--active {
+        border-bottom: 2px solid #f5f5f5;
+        background-color: rgba(23, 23, 23, 0.5);
+        color: #e5e5e5;
+        font-weight: 500;
+      }
+    </style>
+  </head>
+  <body class="bg-[#070707] text-neutral-200">
+    <div class="min-h-screen">
+      <header class="px-4 sm:px-8 pt-8 pb-6">
+        <div class="max-w-5xl mx-auto flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 sm:gap-6">
+          <div>
+            <h1 class="text-2xl sm:text-3xl tracking-tight">
+              <img
+                src="./logo-custom.png"
+                alt="VocaLog"
+                class="h-8 sm:h-9 w-auto"
+                onerror="this.classList.add('hidden'); document.getElementById('logoFallbackText')?.classList.remove('hidden');"
+              />
+              <span id="logoFallbackText" class="hidden inline-flex items-center gap-0.5 font-semibold">
+                <span>VocaL</span><span class="translate-y-[1px]">♡</span><span>g</span>
+              </span>
+            </h1>
+            <p class="mt-2 text-sm sm:text-base text-neutral-400 max-w-xl">
+              Close your eyes and breathe slow.<br />
+              Have a beautiful listening time.
+            </p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2 sm:justify-end sm:max-w-xl">
+            <span id="statusPill" class="px-2.5 py-1 rounded-md border border-neutral-800/80 text-[11px] text-neutral-500">
+              offline-first
+            </span>
+            <span id="cloudStatusPill" class="px-2.5 py-1 rounded-md border border-neutral-800/80 text-[11px] text-neutral-500">
+              cloud: guest
+            </span>
+            <span class="hidden sm:inline-block w-px h-4 bg-neutral-800 mx-0.5" aria-hidden="true"></span>
+            <button id="signupBtn" type="button" class="rounded-md px-3 py-1.5 text-xs font-semibold bg-neutral-100 text-black hover:bg-white transition-colors">
+              Sign up
+            </button>
+            <button id="loginBtn" type="button" class="rounded-md px-3 py-1.5 text-xs font-medium border border-neutral-600 text-neutral-200 hover:bg-neutral-800/70 transition-colors">
+              Login
+            </button>
+            <button id="logoutBtn" type="button" class="rounded-md px-3 py-1.5 text-xs font-medium border border-neutral-600 text-neutral-200 hover:bg-neutral-800/70 transition-colors hidden">
+              Logout
+            </button>
+            <button id="cloudPullBtn" type="button" class="rounded-md px-3 py-1.5 text-xs font-medium border border-neutral-600 text-neutral-200 hover:bg-neutral-800/70 transition-colors hidden">
+              Pull cloud
+            </button>
+            <button id="cloudPushBtn" type="button" class="rounded-md px-3 py-1.5 text-xs font-medium border border-neutral-600 text-neutral-200 hover:bg-neutral-800/70 transition-colors hidden">
+              Push cloud
+            </button>
+            <span class="hidden sm:inline-block w-px h-4 bg-neutral-800 mx-0.5" aria-hidden="true"></span>
+            <button id="exportBackupBtn" type="button" class="rounded-md px-2.5 py-1 text-[11px] font-medium text-neutral-500 border border-neutral-800/80 hover:border-neutral-600 hover:text-neutral-300 transition-colors">
+              Export backup
+            </button>
+            <button id="importBackupBtn" type="button" class="rounded-md px-2.5 py-1 text-[11px] font-medium text-neutral-500 border border-neutral-800/80 hover:border-neutral-600 hover:text-neutral-300 transition-colors">
+              Import backup
+            </button>
+            <input id="importBackupInput" type="file" accept=".json,application/json" class="hidden" />
+          </div>
+        </div>
+      </header>
+
+      <main class="px-4 sm:px-8 pb-14">
+        <div class="max-w-5xl mx-auto">
+          <!-- Tabs: AO3-style strip — active = bar + contrast; inactive = quiet text -->
+          <nav class="border-t border-neutral-800 pt-0 mt-1" aria-label="Main sections">
+            <div class="flex flex-wrap gap-0 border-b border-neutral-800" role="tablist">
+              <button type="button" role="tab" data-tab="import" aria-selected="true" class="tabBtn tabBtn--active">
+                Import
+              </button>
+              <button type="button" role="tab" data-tab="library" aria-selected="false" class="tabBtn tabBtn--inactive">
+                Library & Listen
+              </button>
+              <button type="button" role="tab" data-tab="logs" aria-selected="false" class="tabBtn tabBtn--inactive">
+                Logs
+              </button>
+              <button type="button" role="tab" data-tab="stats" aria-selected="false" class="tabBtn tabBtn--inactive">
+                Stats
+              </button>
+              <button type="button" role="tab" data-tab="collections" aria-selected="false" class="tabBtn tabBtn--inactive">
+                Collections
+              </button>
+            </div>
+          </nav>
+
+          <!-- Panels -->
+          <section id="panel-import" class="tabPanel mt-8">
+            <div class="rounded-2xl border border-neutral-900 bg-neutral-900/10 p-5 sm:p-7">
+              <h2 class="text-sm sm:text-base text-neutral-100">Quick import</h2>
+              <p class="mt-2 text-sm text-neutral-400">
+                Paste a audio link. We’ll try to pull title,and author.
+              </p>
+              <div class="mt-5 flex gap-3 flex-col sm:flex-row">
+                <input
+                  id="importUrl"
+                  type="url"
+                  class="flex-1 rounded-xl border border-neutral-900 bg-black/30 px-4 py-3 text-sm outline-none focus:border-neutral-700"
+                  placeholder="https://open.spotify.com/..."
+                />
+                <button
+                  type="button"
+                  id="importBtn"
+                  class="rounded-xl bg-neutral-100 text-black px-5 py-3 text-sm font-semibold hover:bg-white active:scale-[0.99] transition shadow-sm"
+                >
+                  Import
+                </button>
+              </div>
+              <div id="importStatus" class="mt-3 text-sm text-neutral-400"></div>
+
+              <div id="importPreviewWrap" class="mt-6 hidden">
+                <div class="flex flex-col sm:flex-row gap-5 sm:items-center">
+                  <div class="w-20 h-20 rounded-xl border border-neutral-900 bg-black/40 overflow-hidden flex items-center justify-center">
+                    <img id="importCover" alt="" class="w-full h-full object-cover hidden" />
+                    <span id="importCoverFallback" class="text-[10px] text-neutral-500">cover</span>
+                  </div>
+                  <div class="flex-1">
+                    <div id="importTitle" class="text-base sm:text-lg font-medium leading-snug"></div>
+                    <div id="importMetaLine" class="mt-1 text-xs sm:text-sm text-neutral-400"></div>
+                  </div>
+                </div>
+
+                <div class="mt-5 flex flex-col sm:flex-row gap-3 sm:items-end">
+                  <div class="flex-1">
+                    <label class="text-xs text-neutral-500">Collection</label>
+                    <select id="importCollectionSelect" class="mt-1 w-full rounded-xl border border-neutral-900 bg-black/30 px-4 py-3 text-sm outline-none focus:border-neutral-700">
+                    </select>
+                  </div>
+                  <button type="button" id="importAddBtn" class="rounded-xl border border-neutral-600 bg-neutral-800/50 text-neutral-100 px-5 py-3 text-sm font-medium hover:bg-neutral-800/80 active:scale-[0.99] transition">
+                    Add to library
+                  </button>
+                </div>
+
+                <div class="mt-4 pt-4 border-t border-neutral-800/80">
+                  <label class="text-xs text-neutral-500" for="importNewCollectionName">New collection</label>
+                  <p class="mt-1 text-[11px] text-neutral-600">Create a folder here and it will be selected for this import.</p>
+                  <div class="mt-2 flex flex-col sm:flex-row gap-2 sm:items-end">
+                    <input
+                      id="importNewCollectionName"
+                      type="text"
+                      class="flex-1 rounded-xl border border-neutral-900 bg-black/30 px-4 py-3 text-sm outline-none focus:border-neutral-700"
+                      placeholder="e.g. Author name, playlist…"
+                      autocomplete="off"
+                    />
+                    <button type="button" id="importCreateCollectionBtn" class="shrink-0 rounded-xl border border-neutral-600 bg-neutral-800/50 text-neutral-100 px-4 py-3 text-sm font-medium hover:bg-neutral-800/80 active:scale-[0.99] transition sm:min-w-[7rem]">
+                      Create
+                    </button>
+                  </div>
+                  <div id="importCreateCollectionStatus" class="mt-2 text-xs min-h-[1rem] text-neutral-500"></div>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section id="panel-library" class="tabPanel hidden mt-8">
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+              <div class="lg:col-span-3 rounded-2xl border border-neutral-900 bg-neutral-900/10 p-5 sm:p-7">
+                <div class="flex items-start justify-between gap-3">
+                  <div>
+                    <h2 class="text-sm sm:text-base text-neutral-100">Your library</h2>
+                    <p class="mt-2 text-sm text-neutral-400">Select an item, then start/stop listening.</p>
+                  </div>
+                </div>
+                <div class="mt-4">
+                  <input
+                    id="librarySearch"
+                    type="search"
+                    class="w-full rounded-xl border border-neutral-900 bg-black/30 px-4 py-3 text-sm outline-none focus:border-neutral-700"
+                    placeholder="Search by title or author..."
+                  />
+                </div>
+                <div id="itemsList" class="mt-4 space-y-3"></div>
+              </div>
+
+              <div class="lg:col-span-2 rounded-2xl border border-neutral-900 bg-neutral-900/10 p-5 sm:p-7">
+                <h2 class="text-sm sm:text-base text-neutral-100">Listen</h2>
+                <p class="mt-2 text-sm text-neutral-400">Playback when we have a direct audio URL; otherwise timer-only.</p>
+
+                <div id="listenCardEmpty" class="mt-6 text-sm text-neutral-500 hidden lg:block">
+                  Select an item from the library.
+                </div>
+
+                <div id="listenCard" class="mt-6 hidden">
+                  <div class="flex items-start gap-4">
+                    <div class="w-16 h-16 rounded-xl border border-neutral-900 bg-black/40 overflow-hidden flex items-center justify-center">
+                      <img id="listenCover" class="w-full h-full object-cover hidden" alt="" />
+                      <span id="listenCoverFallback" class="text-[10px] text-neutral-500">cover</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <div id="listenTitle" class="text-base font-medium leading-snug truncate"></div>
+                      <div id="listenMeta" class="mt-1 text-xs text-neutral-400"></div>
+                    </div>
+                  </div>
+
+                  <!-- Custom player: visible when item has audioUrl -->
+                  <div id="listenPlayerWrap" class="mt-5 hidden rounded-xl border border-neutral-800 bg-black/20 p-3 sm:p-4">
+                    <div class="text-[11px] text-neutral-500 mb-2">Playback</div>
+                    <div class="flex flex-col gap-3">
+                      <div class="flex items-center gap-2 sm:gap-3">
+                        <button
+                          type="button"
+                          id="listenPlayPauseBtn"
+                          class="shrink-0 rounded-lg bg-neutral-100 text-black px-3 py-2 text-xs font-semibold hover:bg-white transition min-w-[4.5rem]"
+                        >
+                          Play
+                        </button>
+                        <div class="flex-1 min-w-0 flex items-center gap-2">
+                          <input
+                            type="range"
+                            id="listenProgress"
+                            min="0"
+                            max="1"
+                            step="0.001"
+                            value="0"
+                            class="flex-1 h-1.5 w-full min-w-0 cursor-pointer accent-neutral-100 rounded-full bg-neutral-800"
+                          />
+                        </div>
+                        <div class="shrink-0 text-[11px] tabular-nums text-neutral-400 whitespace-nowrap">
+                          <span id="listenTimeCurrent">0:00</span>
+                          <span class="text-neutral-600"> / </span>
+                          <span id="listenTimeDuration">0:00</span>
+                        </div>
+                      </div>
+                      <p id="listenPlaybackError" class="text-[11px] text-red-400/90 hidden"></p>
+                    </div>
+                  </div>
+
+                  <div class="mt-5 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <div class="text-xs text-neutral-500">Session</div>
+                      <div id="listenTimer" class="text-xl sm:text-2xl font-medium tracking-tight mt-1 tabular-nums">00:00:00</div>
+                      <p id="listenSessionHint" class="mt-1 text-[11px] text-neutral-600 max-w-[14rem]"></p>
+                    </div>
+                    <div class="flex flex-col sm:items-end gap-2">
+                      <div class="flex flex-wrap gap-2 justify-end">
+                        <button
+                          type="button"
+                          id="startBtn"
+                          class="rounded-xl bg-neutral-100 text-black px-4 py-3 text-sm font-semibold hover:bg-white active:scale-[0.99] transition shadow-sm"
+                        >
+                          Start listening
+                        </button>
+                        <button type="button" id="pauseBtn" class="rounded-xl border border-neutral-600 bg-neutral-800/50 text-neutral-100 px-4 py-3 text-sm font-medium hover:bg-neutral-800/80 active:scale-[0.99] transition hidden">
+                          Pause
+                        </button>
+                      </div>
+                      <button type="button" id="stopBtn" class="rounded-lg border border-neutral-700 bg-transparent text-neutral-400 px-4 py-2.5 text-sm font-medium hover:border-neutral-500 hover:text-neutral-200 active:scale-[0.99] transition hidden">
+                        Stop & rate
+                      </button>
+                    </div>
+                  </div>
+
+                  <!-- Hidden element for decoding & time sync; UI is above -->
+                  <audio id="audioEl" preload="metadata" playsinline class="sr-only"></audio>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section id="panel-logs" class="tabPanel hidden mt-8">
+            <div class="rounded-2xl border border-neutral-900 bg-neutral-900/10 p-5 sm:p-7">
+              <div class="flex flex-col md:flex-row md:items-end gap-4 md:justify-between">
+                <div>
+                  <h2 class="text-sm sm:text-base text-neutral-100">Time line</h2>
+                  <p class="mt-2 text-sm text-neutral-400">Your listening sessions, newest first.</p>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-3">
+                  <div class="w-full sm:w-56">
+                    <label class="text-xs text-neutral-500">Collection filter</label>
+                    <select id="logsCollectionFilter" class="mt-1 w-full rounded-xl border border-neutral-900 bg-black/30 px-4 py-3 text-sm outline-none focus:border-neutral-700"></select>
+                  </div>
+                  <div class="w-full sm:w-56">
+                    <label class="text-xs text-neutral-500">Author/VA filter</label>
+                    <select id="logsAuthorFilter" class="mt-1 w-full rounded-xl border border-neutral-900 bg-black/30 px-4 py-3 text-sm outline-none focus:border-neutral-700"></select>
+                  </div>
+                </div>
+              </div>
+
+              <div id="logsList" class="mt-5 space-y-4"></div>
+            </div>
+          </section>
+
+          <section id="panel-stats" class="tabPanel hidden mt-8">
+            <div class="rounded-2xl border border-neutral-900 bg-neutral-900/10 p-5 sm:p-7">
+              <div class="flex flex-col md:flex-row gap-4 md:items-end md:justify-between">
+                <div>
+                  <h2 class="text-sm sm:text-base text-neutral-100">Stats</h2>
+                  <p class="mt-2 text-sm text-neutral-400">Simple charts. No flourish.</p>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-3">
+                  <div class="w-full sm:w-56">
+                    <label class="text-xs text-neutral-500">Range</label>
+                    <select id="statsRange" class="mt-1 w-full rounded-xl border border-neutral-900 bg-black/30 px-4 py-3 text-sm outline-none focus:border-neutral-700">
+                      <option value="daily14">Last 14 days</option>
+                      <option value="monthly12">Last 12 months</option>
+                      <option value="yearly5">Last 5 years</option>
+                      <option value="yearlyAll">All years</option>
+                    </select>
+                  </div>
+                  <div class="w-full sm:w-56">
+                    <label class="text-xs text-neutral-500">Aggregate by</label>
+                    <select id="statsAggregate" class="mt-1 w-full rounded-xl border border-neutral-900 bg-black/30 px-4 py-3 text-sm outline-none focus:border-neutral-700">
+                      <option value="platform">Platform</option>
+                      <option value="author">Author/VA</option>
+                      <option value="collection">Collection</option>
+                    </select>
+                  </div>
+                  <div class="w-full sm:w-56">
+                    <label class="text-xs text-neutral-500">Collection filter</label>
+                    <select id="statsCollectionFilter" class="mt-1 w-full rounded-xl border border-neutral-900 bg-black/30 px-4 py-3 text-sm outline-none focus:border-neutral-700"></select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-6">
+                <div class="flex items-baseline justify-between gap-4">
+                  <div>
+                    <div class="text-xs text-neutral-500">Total listened</div>
+                    <div id="statsTotal" class="text-2xl sm:text-3xl font-medium tracking-tight mt-1">0h</div>
+                  </div>
+                  <div class="text-sm text-neutral-400" id="statsSubline"></div>
+                </div>
+                <div id="timeSeriesChart" class="mt-5"></div>
+              </div>
+
+              <div class="mt-8">
+                <h3 class="text-sm text-neutral-100">Breakdown</h3>
+                <div id="breakdownChart" class="mt-4"></div>
+              </div>
+            </div>
+          </section>
+
+          <section id="panel-collections" class="tabPanel hidden mt-8">
+            <div class="rounded-2xl border border-neutral-900 bg-neutral-900/10 p-5 sm:p-7">
+              <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+                <div>
+                  <h2 class="text-sm sm:text-base text-neutral-100">Collections</h2>
+                  <p class="mt-2 text-sm text-neutral-400">AO3-style: default “Safe for later” + your own folders.</p>
+                </div>
+                <div class="w-full md:w-72">
+                  <label class="text-xs text-neutral-500">Create new collection</label>
+                  <div class="mt-1 flex gap-3">
+                    <input id="newCollectionName" class="flex-1 rounded-xl border border-neutral-900 bg-black/30 px-4 py-3 text-sm outline-none focus:border-neutral-700" placeholder="e.g. Author: X" />
+                    <button type="button" id="createCollectionBtn" class="rounded-xl bg-neutral-100 text-black px-5 py-3 text-sm font-semibold hover:bg-white active:scale-[0.99] transition shadow-sm">
+                      Create
+                    </button>
+                  </div>
+                  <div id="createCollectionStatus" class="mt-2 text-xs text-neutral-500"></div>
+                </div>
+              </div>
+
+              <div id="collectionsList" class="mt-6 space-y-4"></div>
+              <div id="collectionItemsPanel" class="mt-6 hidden rounded-2xl border border-neutral-900 bg-black/20 p-4">
+                <div class="flex items-center justify-between gap-3">
+                  <div>
+                    <div id="collectionItemsTitle" class="text-sm font-medium text-neutral-100"></div>
+                    <div id="collectionItemsMeta" class="mt-1 text-xs text-neutral-400"></div>
+                  </div>
+                  <button type="button" id="collectionItemsCloseBtn" class="rounded-md border border-neutral-800 text-neutral-500 px-3 py-1.5 text-xs font-medium hover:border-neutral-600 hover:text-neutral-300 transition">
+                    Close
+                  </button>
+                </div>
+                <div id="collectionItemsList" class="mt-4 space-y-3"></div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <!-- Feedback modal -->
+    <div id="feedbackOverlay" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50">
+      <div class="w-full max-w-md rounded-2xl border border-neutral-800 bg-[#0b0b0b] p-5 sm:p-6">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <h3 class="text-base font-medium">Rate this listening</h3>
+            <p id="feedbackTitle" class="mt-1 text-xs text-neutral-400"></p>
+          </div>
+          <div class="text-xs text-neutral-500">
+            <span class="inline-block w-2 h-2 rounded-full bg-neutral-500 mr-2"></span>
+            optional later allowed
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <div class="text-xs text-neutral-500">Stars</div>
+          <div id="starsRow" class="mt-2 flex gap-2">
+            <button type="button" data-star="1" class="starBtn rounded-md px-1.5 py-0.5 text-lg leading-none text-neutral-500 hover:text-neutral-200 hover:bg-neutral-800/50 transition">★</button>
+            <button type="button" data-star="2" class="starBtn rounded-md px-1.5 py-0.5 text-lg leading-none text-neutral-500 hover:text-neutral-200 hover:bg-neutral-800/50 transition">★</button>
+            <button type="button" data-star="3" class="starBtn rounded-md px-1.5 py-0.5 text-lg leading-none text-neutral-500 hover:text-neutral-200 hover:bg-neutral-800/50 transition">★</button>
+            <button type="button" data-star="4" class="starBtn rounded-md px-1.5 py-0.5 text-lg leading-none text-neutral-500 hover:text-neutral-200 hover:bg-neutral-800/50 transition">★</button>
+            <button type="button" data-star="5" class="starBtn rounded-md px-1.5 py-0.5 text-lg leading-none text-neutral-500 hover:text-neutral-200 hover:bg-neutral-800/50 transition">★</button>
+          </div>
+          <div id="starsHint" class="mt-1 text-xs text-neutral-500"></div>
+        </div>
+
+        <div class="mt-4">
+          <label class="text-xs text-neutral-500">One impression</label>
+          <textarea id="feedbackText" rows="3" class="mt-1 w-full rounded-xl border border-neutral-900 bg-black/30 px-4 py-3 text-sm outline-none focus:border-neutral-700 resize-none" placeholder="Write anything (long or short)."></textarea>
+          <div class="mt-2 text-[11px] text-neutral-500">No character limit.</div>
+        </div>
+
+        <div class="mt-5 flex gap-3">
+          <button type="button" id="saveFeedbackBtn" class="flex-1 rounded-xl bg-neutral-100 text-black px-4 py-3 text-sm font-semibold hover:bg-white active:scale-[0.99] transition shadow-sm">
+            Save
+          </button>
+          <button type="button" id="laterFeedbackBtn" class="flex-1 rounded-xl border border-neutral-600 bg-neutral-800/50 text-neutral-100 px-4 py-3 text-sm font-medium hover:bg-neutral-800/80 active:scale-[0.99] transition">
+            Later
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
+
