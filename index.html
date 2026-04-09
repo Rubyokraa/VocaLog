@@ -1,0 +1,355 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>VocaLog</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <meta name="color-scheme" content="dark" />
+  </head>
+  <body class="bg-[#070707] text-neutral-200">
+    <div class="min-h-screen">
+      <header class="px-4 sm:px-8 pt-8 pb-6">
+        <div class="max-w-5xl mx-auto flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 sm:gap-6">
+          <div>
+            <h1 class="text-2xl sm:text-3xl tracking-tight">
+              <span id="logoFallbackText" class="inline-flex items-center gap-0.5 font-semibold">
+                <span>VocaL</span><span class="translate-y-[1px]">♡</span><span>g</span>
+              </span>
+            </h1>
+            <p class="mt-2 text-sm sm:text-base text-neutral-400 max-w-xl">
+              Close your eyes and breathe slow.<br />
+              Have a beautiful listening time.
+            </p>
+          </div>
+          <div class="flex flex-wrap items-center gap-2 sm:justify-end">
+            <span id="statusPill" class="px-3 py-1 rounded-full border border-neutral-800 text-xs text-neutral-400">
+              offline-first
+            </span>
+            <span id="cloudStatusPill" class="px-3 py-1 rounded-full border border-neutral-800 text-xs text-neutral-500">
+              cloud: guest
+            </span>
+            <button id="signupBtn" class="px-3 py-1 rounded-full border border-neutral-800 text-xs text-neutral-300 hover:bg-neutral-900/40">
+              Sign up
+            </button>
+            <button id="loginBtn" class="px-3 py-1 rounded-full border border-neutral-800 text-xs text-neutral-300 hover:bg-neutral-900/40">
+              Login
+            </button>
+            <button id="logoutBtn" class="px-3 py-1 rounded-full border border-neutral-800 text-xs text-neutral-300 hover:bg-neutral-900/40 hidden">
+              Logout
+            </button>
+            <button id="cloudPullBtn" class="px-3 py-1 rounded-full border border-neutral-800 text-xs text-neutral-300 hover:bg-neutral-900/40 hidden">
+              Pull cloud
+            </button>
+            <button id="cloudPushBtn" class="px-3 py-1 rounded-full border border-neutral-800 text-xs text-neutral-300 hover:bg-neutral-900/40 hidden">
+              Push cloud
+            </button>
+            <button id="exportBackupBtn" class="px-3 py-1 rounded-full border border-neutral-800 text-xs text-neutral-300 hover:bg-neutral-900/40">
+              Export backup
+            </button>
+            <button id="importBackupBtn" class="px-3 py-1 rounded-full border border-neutral-800 text-xs text-neutral-300 hover:bg-neutral-900/40">
+              Import backup
+            </button>
+            <input id="importBackupInput" type="file" accept=".json,application/json" class="hidden" />
+          </div>
+        </div>
+      </header>
+
+      <main class="px-4 sm:px-8 pb-14">
+        <div class="max-w-5xl mx-auto">
+          <!-- Tabs -->
+          <nav class="flex flex-wrap gap-2 border-t border-neutral-900 pt-4">
+            <button data-tab="import" class="tabBtn text-xs sm:text-sm px-3 py-2 rounded-full border border-neutral-900 bg-neutral-900/20 hover:bg-neutral-900/40">
+              Import
+            </button>
+            <button data-tab="library" class="tabBtn text-xs sm:text-sm px-3 py-2 rounded-full border border-neutral-900 bg-neutral-900/20 hover:bg-neutral-900/40">
+              Library & Listen
+            </button>
+            <button data-tab="logs" class="tabBtn text-xs sm:text-sm px-3 py-2 rounded-full border border-neutral-900 bg-neutral-900/20 hover:bg-neutral-900/40">
+              Logs
+            </button>
+            <button data-tab="stats" class="tabBtn text-xs sm:text-sm px-3 py-2 rounded-full border border-neutral-900 bg-neutral-900/20 hover:bg-neutral-900/40">
+              Stats
+            </button>
+            <button data-tab="collections" class="tabBtn text-xs sm:text-sm px-3 py-2 rounded-full border border-neutral-900 bg-neutral-900/20 hover:bg-neutral-900/40">
+              Collections
+            </button>
+          </nav>
+
+          <!-- Panels -->
+          <section id="panel-import" class="tabPanel mt-8">
+            <div class="rounded-2xl border border-neutral-900 bg-neutral-900/10 p-5 sm:p-7">
+              <h2 class="text-sm sm:text-base text-neutral-100">Quick import</h2>
+              <p class="mt-2 text-sm text-neutral-400">
+                Paste a audio link. We’ll try to pull title,and author.
+              </p>
+              <div class="mt-5 flex gap-3 flex-col sm:flex-row">
+                <input
+                  id="importUrl"
+                  type="url"
+                  class="flex-1 rounded-xl border border-neutral-900 bg-black/30 px-4 py-3 text-sm outline-none focus:border-neutral-700"
+                  placeholder="https://open.spotify.com/..."
+                />
+                <button
+                  id="importBtn"
+                  class="rounded-xl bg-neutral-100 text-black px-4 py-3 text-sm font-medium hover:bg-neutral-200 active:scale-[0.99] transition"
+                >
+                  Import
+                </button>
+              </div>
+              <div id="importStatus" class="mt-3 text-sm text-neutral-400"></div>
+
+              <div id="importPreviewWrap" class="mt-6 hidden">
+                <div class="flex flex-col sm:flex-row gap-5 sm:items-center">
+                  <div class="w-20 h-20 rounded-xl border border-neutral-900 bg-black/40 overflow-hidden flex items-center justify-center">
+                    <img id="importCover" alt="" class="w-full h-full object-cover hidden" />
+                    <span id="importCoverFallback" class="text-[10px] text-neutral-500">cover</span>
+                  </div>
+                  <div class="flex-1">
+                    <div id="importTitle" class="text-base sm:text-lg font-medium leading-snug"></div>
+                    <div id="importMetaLine" class="mt-1 text-xs sm:text-sm text-neutral-400"></div>
+                  </div>
+                </div>
+
+                <div class="mt-5 flex flex-col sm:flex-row gap-3 sm:items-end">
+                  <div class="flex-1">
+                    <label class="text-xs text-neutral-500">Collection</label>
+                    <select id="importCollectionSelect" class="mt-1 w-full rounded-xl border border-neutral-900 bg-black/30 px-4 py-3 text-sm outline-none focus:border-neutral-700">
+                    </select>
+                  </div>
+                  <button id="importAddBtn" class="rounded-xl bg-neutral-900/60 border border-neutral-800 text-neutral-100 px-5 py-3 text-sm font-medium hover:bg-neutral-900/80 active:scale-[0.99] transition">
+                    Add to library
+                  </button>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section id="panel-library" class="tabPanel hidden mt-8">
+            <div class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+              <div class="lg:col-span-3 rounded-2xl border border-neutral-900 bg-neutral-900/10 p-5 sm:p-7">
+                <div class="flex items-start justify-between gap-3">
+                  <div>
+                    <h2 class="text-sm sm:text-base text-neutral-100">Your library</h2>
+                    <p class="mt-2 text-sm text-neutral-400">Select an item, then start/stop listening.</p>
+                  </div>
+                </div>
+                <div class="mt-4">
+                  <input
+                    id="librarySearch"
+                    type="search"
+                    class="w-full rounded-xl border border-neutral-900 bg-black/30 px-4 py-3 text-sm outline-none focus:border-neutral-700"
+                    placeholder="Search by title or author..."
+                  />
+                </div>
+                <div id="itemsList" class="mt-4 space-y-3"></div>
+              </div>
+
+              <div class="lg:col-span-2 rounded-2xl border border-neutral-900 bg-neutral-900/10 p-5 sm:p-7">
+                <h2 class="text-sm sm:text-base text-neutral-100">Listen</h2>
+                <p class="mt-2 text-sm text-neutral-400">Counting happens inside VocaLog.</p>
+
+                <div id="listenCardEmpty" class="mt-6 text-sm text-neutral-500 hidden lg:block">
+                  Select an item from the library.
+                </div>
+
+                <div id="listenCard" class="mt-6 hidden">
+                  <div class="flex items-start gap-4">
+                    <div class="w-16 h-16 rounded-xl border border-neutral-900 bg-black/40 overflow-hidden flex items-center justify-center">
+                      <img id="listenCover" class="w-full h-full object-cover hidden" alt="" />
+                      <span id="listenCoverFallback" class="text-[10px] text-neutral-500">cover</span>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                      <div id="listenTitle" class="text-base font-medium leading-snug truncate"></div>
+                      <div id="listenMeta" class="mt-1 text-xs text-neutral-400"></div>
+                    </div>
+                  </div>
+
+                  <div class="mt-5 flex items-center justify-between gap-3">
+                    <div>
+                      <div class="text-xs text-neutral-500">Timer</div>
+                      <div id="listenTimer" class="text-xl sm:text-2xl font-medium tracking-tight mt-1">00:00:00</div>
+                    </div>
+                    <div class="flex flex-col sm:items-end gap-2">
+                      <div class="flex gap-2">
+                        <button id="startBtn" class="rounded-xl bg-neutral-100 text-black px-4 py-3 text-sm font-medium hover:bg-neutral-200 active:scale-[0.99] transition">
+                          Start listening
+                        </button>
+                        <button id="pauseBtn" class="rounded-xl bg-neutral-900/60 border border-neutral-800 text-neutral-100 px-4 py-3 text-sm font-medium hover:bg-neutral-900/80 active:scale-[0.99] transition hidden">
+                          Pause
+                        </button>
+                      </div>
+                      <button id="stopBtn" class="rounded-xl bg-neutral-900/60 border border-neutral-800 text-neutral-100 px-4 py-3 text-sm font-medium hover:bg-neutral-900/80 active:scale-[0.99] transition hidden">
+                        Stop & rate
+                      </button>
+                    </div>
+                  </div>
+
+                  <div class="mt-4 text-xs text-neutral-500">
+                    If we detect an audio URL, we’ll try to attach the timer to playback.
+                  </div>
+
+                  <audio id="audioEl" class="mt-4 w-full hidden" controls></audio>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section id="panel-logs" class="tabPanel hidden mt-8">
+            <div class="rounded-2xl border border-neutral-900 bg-neutral-900/10 p-5 sm:p-7">
+              <div class="flex flex-col md:flex-row md:items-end gap-4 md:justify-between">
+                <div>
+                  <h2 class="text-sm sm:text-base text-neutral-100">Time line</h2>
+                  <p class="mt-2 text-sm text-neutral-400">Your listening sessions, newest first.</p>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-3">
+                  <div class="w-full sm:w-56">
+                    <label class="text-xs text-neutral-500">Collection filter</label>
+                    <select id="logsCollectionFilter" class="mt-1 w-full rounded-xl border border-neutral-900 bg-black/30 px-4 py-3 text-sm outline-none focus:border-neutral-700"></select>
+                  </div>
+                  <div class="w-full sm:w-56">
+                    <label class="text-xs text-neutral-500">Author/VA filter</label>
+                    <select id="logsAuthorFilter" class="mt-1 w-full rounded-xl border border-neutral-900 bg-black/30 px-4 py-3 text-sm outline-none focus:border-neutral-700"></select>
+                  </div>
+                </div>
+              </div>
+
+              <div id="logsList" class="mt-5 space-y-4"></div>
+            </div>
+          </section>
+
+          <section id="panel-stats" class="tabPanel hidden mt-8">
+            <div class="rounded-2xl border border-neutral-900 bg-neutral-900/10 p-5 sm:p-7">
+              <div class="flex flex-col md:flex-row gap-4 md:items-end md:justify-between">
+                <div>
+                  <h2 class="text-sm sm:text-base text-neutral-100">Stats</h2>
+                  <p class="mt-2 text-sm text-neutral-400">Simple charts. No flourish.</p>
+                </div>
+                <div class="flex flex-col sm:flex-row gap-3">
+                  <div class="w-full sm:w-56">
+                    <label class="text-xs text-neutral-500">Range</label>
+                    <select id="statsRange" class="mt-1 w-full rounded-xl border border-neutral-900 bg-black/30 px-4 py-3 text-sm outline-none focus:border-neutral-700">
+                      <option value="daily14">Last 14 days</option>
+                      <option value="monthly12">Last 12 months</option>
+                      <option value="yearly5">Last 5 years</option>
+                      <option value="yearlyAll">All years</option>
+                    </select>
+                  </div>
+                  <div class="w-full sm:w-56">
+                    <label class="text-xs text-neutral-500">Aggregate by</label>
+                    <select id="statsAggregate" class="mt-1 w-full rounded-xl border border-neutral-900 bg-black/30 px-4 py-3 text-sm outline-none focus:border-neutral-700">
+                      <option value="platform">Platform</option>
+                      <option value="author">Author/VA</option>
+                      <option value="collection">Collection</option>
+                    </select>
+                  </div>
+                  <div class="w-full sm:w-56">
+                    <label class="text-xs text-neutral-500">Collection filter</label>
+                    <select id="statsCollectionFilter" class="mt-1 w-full rounded-xl border border-neutral-900 bg-black/30 px-4 py-3 text-sm outline-none focus:border-neutral-700"></select>
+                  </div>
+                </div>
+              </div>
+
+              <div class="mt-6">
+                <div class="flex items-baseline justify-between gap-4">
+                  <div>
+                    <div class="text-xs text-neutral-500">Total listened</div>
+                    <div id="statsTotal" class="text-2xl sm:text-3xl font-medium tracking-tight mt-1">0h</div>
+                  </div>
+                  <div class="text-sm text-neutral-400" id="statsSubline"></div>
+                </div>
+                <div id="timeSeriesChart" class="mt-5"></div>
+              </div>
+
+              <div class="mt-8">
+                <h3 class="text-sm text-neutral-100">Breakdown</h3>
+                <div id="breakdownChart" class="mt-4"></div>
+              </div>
+            </div>
+          </section>
+
+          <section id="panel-collections" class="tabPanel hidden mt-8">
+            <div class="rounded-2xl border border-neutral-900 bg-neutral-900/10 p-5 sm:p-7">
+              <div class="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
+                <div>
+                  <h2 class="text-sm sm:text-base text-neutral-100">Collections</h2>
+                  <p class="mt-2 text-sm text-neutral-400">AO3-style: default “Safe for later” + your own folders.</p>
+                </div>
+                <div class="w-full md:w-72">
+                  <label class="text-xs text-neutral-500">Create new collection</label>
+                  <div class="mt-1 flex gap-3">
+                    <input id="newCollectionName" class="flex-1 rounded-xl border border-neutral-900 bg-black/30 px-4 py-3 text-sm outline-none focus:border-neutral-700" placeholder="e.g. Author: X" />
+                    <button id="createCollectionBtn" class="rounded-xl bg-neutral-100 text-black px-4 py-3 text-sm font-medium hover:bg-neutral-200 active:scale-[0.99] transition">
+                      Create
+                    </button>
+                  </div>
+                  <div id="createCollectionStatus" class="mt-2 text-xs text-neutral-500"></div>
+                </div>
+              </div>
+
+              <div id="collectionsList" class="mt-6 space-y-4"></div>
+              <div id="collectionItemsPanel" class="mt-6 hidden rounded-2xl border border-neutral-900 bg-black/20 p-4">
+                <div class="flex items-center justify-between gap-3">
+                  <div>
+                    <div id="collectionItemsTitle" class="text-sm font-medium text-neutral-100"></div>
+                    <div id="collectionItemsMeta" class="mt-1 text-xs text-neutral-400"></div>
+                  </div>
+                  <button id="collectionItemsCloseBtn" class="rounded-xl border border-neutral-800 bg-neutral-900/20 text-neutral-100/90 px-3 py-2 text-xs hover:bg-neutral-900/35 transition">
+                    Close
+                  </button>
+                </div>
+                <div id="collectionItemsList" class="mt-4 space-y-3"></div>
+              </div>
+            </div>
+          </section>
+        </div>
+      </main>
+    </div>
+
+    <!-- Feedback modal -->
+    <div id="feedbackOverlay" class="fixed inset-0 bg-black/70 hidden items-center justify-center p-4 z-50">
+      <div class="w-full max-w-md rounded-2xl border border-neutral-800 bg-[#0b0b0b] p-5 sm:p-6">
+        <div class="flex items-start justify-between gap-3">
+          <div>
+            <h3 class="text-base font-medium">Rate this listening</h3>
+            <p id="feedbackTitle" class="mt-1 text-xs text-neutral-400"></p>
+          </div>
+          <div class="text-xs text-neutral-500">
+            <span class="inline-block w-2 h-2 rounded-full bg-neutral-500 mr-2"></span>
+            optional later allowed
+          </div>
+        </div>
+
+        <div class="mt-4">
+          <div class="text-xs text-neutral-500">Stars</div>
+          <div id="starsRow" class="mt-2 flex gap-2">
+            <button type="button" data-star="1" class="starBtn text-neutral-500 hover:text-neutral-200 transition">★</button>
+            <button type="button" data-star="2" class="starBtn text-neutral-500 hover:text-neutral-200 transition">★</button>
+            <button type="button" data-star="3" class="starBtn text-neutral-500 hover:text-neutral-200 transition">★</button>
+            <button type="button" data-star="4" class="starBtn text-neutral-500 hover:text-neutral-200 transition">★</button>
+            <button type="button" data-star="5" class="starBtn text-neutral-500 hover:text-neutral-200 transition">★</button>
+          </div>
+          <div id="starsHint" class="mt-1 text-xs text-neutral-500"></div>
+        </div>
+
+        <div class="mt-4">
+          <label class="text-xs text-neutral-500">One impression</label>
+          <textarea id="feedbackText" rows="3" class="mt-1 w-full rounded-xl border border-neutral-900 bg-black/30 px-4 py-3 text-sm outline-none focus:border-neutral-700 resize-none" placeholder="Write anything (long or short)."></textarea>
+          <div class="mt-2 text-[11px] text-neutral-500">No character limit.</div>
+        </div>
+
+        <div class="mt-5 flex gap-3">
+          <button id="saveFeedbackBtn" class="flex-1 rounded-xl bg-neutral-100 text-black px-4 py-3 text-sm font-medium hover:bg-neutral-200 active:scale-[0.99] transition">
+            Save
+          </button>
+          <button id="laterFeedbackBtn" class="flex-1 rounded-xl bg-neutral-900/60 border border-neutral-800 text-neutral-100 px-4 py-3 text-sm font-medium hover:bg-neutral-900/80 active:scale-[0.99] transition">
+            Later
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <script type="module" src="./app.js"></script>
+  </body>
+</html>
+
