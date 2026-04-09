@@ -6,6 +6,45 @@
     <title>VocaLog</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <meta name="color-scheme" content="dark" />
+    <style>
+      /* Tab strip: AO3-like — active = bottom bar + surface; inactive = quiet */
+      .tabBtn {
+        font-size: 0.75rem;
+        line-height: 1.25rem;
+        padding: 0.625rem 0.75rem;
+        margin-bottom: -1px;
+        border-top-left-radius: 0.375rem;
+        border-top-right-radius: 0.375rem;
+        transition: color 0.15s ease, background-color 0.15s ease, border-color 0.15s ease;
+      }
+      @media (min-width: 640px) {
+        .tabBtn {
+          font-size: 0.875rem;
+          padding-left: 1rem;
+          padding-right: 1rem;
+        }
+      }
+      .tabBtn:focus {
+        outline: none;
+      }
+      .tabBtn:focus-visible {
+        box-shadow: 0 0 0 2px #070707, 0 0 0 4px #737373;
+      }
+      .tabBtn--inactive {
+        border-bottom: 2px solid transparent;
+        color: #737373;
+      }
+      .tabBtn--inactive:hover {
+        color: #d4d4d4;
+        background-color: rgba(23, 23, 23, 0.25);
+      }
+      .tabBtn--active {
+        border-bottom: 2px solid #f5f5f5;
+        background-color: rgba(23, 23, 23, 0.5);
+        color: #e5e5e5;
+        font-weight: 500;
+      }
+    </style>
   </head>
   <body class="bg-[#070707] text-neutral-200">
     <div class="min-h-screen">
@@ -28,32 +67,34 @@
               Have a beautiful listening time.
             </p>
           </div>
-          <div class="flex flex-wrap items-center gap-2 sm:justify-end">
-            <span id="statusPill" class="px-3 py-1 rounded-full border border-neutral-800 text-xs text-neutral-400">
+          <div class="flex flex-wrap items-center gap-2 sm:justify-end sm:max-w-xl">
+            <span id="statusPill" class="px-2.5 py-1 rounded-md border border-neutral-800/80 text-[11px] text-neutral-500">
               offline-first
             </span>
-            <span id="cloudStatusPill" class="px-3 py-1 rounded-full border border-neutral-800 text-xs text-neutral-500">
+            <span id="cloudStatusPill" class="px-2.5 py-1 rounded-md border border-neutral-800/80 text-[11px] text-neutral-500">
               cloud: guest
             </span>
-            <button id="signupBtn" class="px-3 py-1 rounded-full border border-neutral-800 text-xs text-neutral-300 hover:bg-neutral-900/40">
+            <span class="hidden sm:inline-block w-px h-4 bg-neutral-800 mx-0.5" aria-hidden="true"></span>
+            <button id="signupBtn" type="button" class="rounded-md px-3 py-1.5 text-xs font-semibold bg-neutral-100 text-black hover:bg-white transition-colors">
               Sign up
             </button>
-            <button id="loginBtn" class="px-3 py-1 rounded-full border border-neutral-800 text-xs text-neutral-300 hover:bg-neutral-900/40">
+            <button id="loginBtn" type="button" class="rounded-md px-3 py-1.5 text-xs font-medium border border-neutral-600 text-neutral-200 hover:bg-neutral-800/70 transition-colors">
               Login
             </button>
-            <button id="logoutBtn" class="px-3 py-1 rounded-full border border-neutral-800 text-xs text-neutral-300 hover:bg-neutral-900/40 hidden">
+            <button id="logoutBtn" type="button" class="rounded-md px-3 py-1.5 text-xs font-medium border border-neutral-600 text-neutral-200 hover:bg-neutral-800/70 transition-colors hidden">
               Logout
             </button>
-            <button id="cloudPullBtn" class="px-3 py-1 rounded-full border border-neutral-800 text-xs text-neutral-300 hover:bg-neutral-900/40 hidden">
+            <button id="cloudPullBtn" type="button" class="rounded-md px-3 py-1.5 text-xs font-medium border border-neutral-600 text-neutral-200 hover:bg-neutral-800/70 transition-colors hidden">
               Pull cloud
             </button>
-            <button id="cloudPushBtn" class="px-3 py-1 rounded-full border border-neutral-800 text-xs text-neutral-300 hover:bg-neutral-900/40 hidden">
+            <button id="cloudPushBtn" type="button" class="rounded-md px-3 py-1.5 text-xs font-medium border border-neutral-600 text-neutral-200 hover:bg-neutral-800/70 transition-colors hidden">
               Push cloud
             </button>
-            <button id="exportBackupBtn" class="px-3 py-1 rounded-full border border-neutral-800 text-xs text-neutral-300 hover:bg-neutral-900/40">
+            <span class="hidden sm:inline-block w-px h-4 bg-neutral-800 mx-0.5" aria-hidden="true"></span>
+            <button id="exportBackupBtn" type="button" class="rounded-md px-2.5 py-1 text-[11px] font-medium text-neutral-500 border border-neutral-800/80 hover:border-neutral-600 hover:text-neutral-300 transition-colors">
               Export backup
             </button>
-            <button id="importBackupBtn" class="px-3 py-1 rounded-full border border-neutral-800 text-xs text-neutral-300 hover:bg-neutral-900/40">
+            <button id="importBackupBtn" type="button" class="rounded-md px-2.5 py-1 text-[11px] font-medium text-neutral-500 border border-neutral-800/80 hover:border-neutral-600 hover:text-neutral-300 transition-colors">
               Import backup
             </button>
             <input id="importBackupInput" type="file" accept=".json,application/json" class="hidden" />
@@ -63,23 +104,25 @@
 
       <main class="px-4 sm:px-8 pb-14">
         <div class="max-w-5xl mx-auto">
-          <!-- Tabs -->
-          <nav class="flex flex-wrap gap-2 border-t border-neutral-900 pt-4">
-            <button data-tab="import" class="tabBtn text-xs sm:text-sm px-3 py-2 rounded-full border border-neutral-900 bg-neutral-900/20 hover:bg-neutral-900/40">
-              Import
-            </button>
-            <button data-tab="library" class="tabBtn text-xs sm:text-sm px-3 py-2 rounded-full border border-neutral-900 bg-neutral-900/20 hover:bg-neutral-900/40">
-              Library & Listen
-            </button>
-            <button data-tab="logs" class="tabBtn text-xs sm:text-sm px-3 py-2 rounded-full border border-neutral-900 bg-neutral-900/20 hover:bg-neutral-900/40">
-              Logs
-            </button>
-            <button data-tab="stats" class="tabBtn text-xs sm:text-sm px-3 py-2 rounded-full border border-neutral-900 bg-neutral-900/20 hover:bg-neutral-900/40">
-              Stats
-            </button>
-            <button data-tab="collections" class="tabBtn text-xs sm:text-sm px-3 py-2 rounded-full border border-neutral-900 bg-neutral-900/20 hover:bg-neutral-900/40">
-              Collections
-            </button>
+          <!-- Tabs: AO3-style strip — active = bar + contrast; inactive = quiet text -->
+          <nav class="border-t border-neutral-800 pt-0 mt-1" aria-label="Main sections">
+            <div class="flex flex-wrap gap-0 border-b border-neutral-800">
+              <button type="button" data-tab="import" class="tabBtn tabBtn--active">
+                Import
+              </button>
+              <button type="button" data-tab="library" class="tabBtn tabBtn--inactive">
+                Library & Listen
+              </button>
+              <button type="button" data-tab="logs" class="tabBtn tabBtn--inactive">
+                Logs
+              </button>
+              <button type="button" data-tab="stats" class="tabBtn tabBtn--inactive">
+                Stats
+              </button>
+              <button type="button" data-tab="collections" class="tabBtn tabBtn--inactive">
+                Collections
+              </button>
+            </div>
           </nav>
 
           <!-- Panels -->
@@ -97,8 +140,9 @@
                   placeholder="https://open.spotify.com/..."
                 />
                 <button
+                  type="button"
                   id="importBtn"
-                  class="rounded-xl bg-neutral-100 text-black px-4 py-3 text-sm font-medium hover:bg-neutral-200 active:scale-[0.99] transition"
+                  class="rounded-xl bg-neutral-100 text-black px-5 py-3 text-sm font-semibold hover:bg-white active:scale-[0.99] transition shadow-sm"
                 >
                   Import
                 </button>
@@ -123,7 +167,7 @@
                     <select id="importCollectionSelect" class="mt-1 w-full rounded-xl border border-neutral-900 bg-black/30 px-4 py-3 text-sm outline-none focus:border-neutral-700">
                     </select>
                   </div>
-                  <button id="importAddBtn" class="rounded-xl bg-neutral-900/60 border border-neutral-800 text-neutral-100 px-5 py-3 text-sm font-medium hover:bg-neutral-900/80 active:scale-[0.99] transition">
+                  <button type="button" id="importAddBtn" class="rounded-xl border border-neutral-600 bg-neutral-800/50 text-neutral-100 px-5 py-3 text-sm font-medium hover:bg-neutral-800/80 active:scale-[0.99] transition">
                     Add to library
                   </button>
                 </div>
@@ -178,14 +222,14 @@
                     </div>
                     <div class="flex flex-col sm:items-end gap-2">
                       <div class="flex gap-2">
-                        <button id="startBtn" class="rounded-xl bg-neutral-100 text-black px-4 py-3 text-sm font-medium hover:bg-neutral-200 active:scale-[0.99] transition">
+                        <button type="button" id="startBtn" class="rounded-xl bg-neutral-100 text-black px-4 py-3 text-sm font-semibold hover:bg-white active:scale-[0.99] transition shadow-sm">
                           Start listening
                         </button>
-                        <button id="pauseBtn" class="rounded-xl bg-neutral-900/60 border border-neutral-800 text-neutral-100 px-4 py-3 text-sm font-medium hover:bg-neutral-900/80 active:scale-[0.99] transition hidden">
+                        <button type="button" id="pauseBtn" class="rounded-xl border border-neutral-600 bg-neutral-800/50 text-neutral-100 px-4 py-3 text-sm font-medium hover:bg-neutral-800/80 active:scale-[0.99] transition hidden">
                           Pause
                         </button>
                       </div>
-                      <button id="stopBtn" class="rounded-xl bg-neutral-900/60 border border-neutral-800 text-neutral-100 px-4 py-3 text-sm font-medium hover:bg-neutral-900/80 active:scale-[0.99] transition hidden">
+                      <button type="button" id="stopBtn" class="rounded-lg border border-neutral-700 bg-transparent text-neutral-400 px-4 py-2.5 text-sm font-medium hover:border-neutral-500 hover:text-neutral-200 active:scale-[0.99] transition hidden">
                         Stop & rate
                       </button>
                     </div>
@@ -285,7 +329,7 @@
                   <label class="text-xs text-neutral-500">Create new collection</label>
                   <div class="mt-1 flex gap-3">
                     <input id="newCollectionName" class="flex-1 rounded-xl border border-neutral-900 bg-black/30 px-4 py-3 text-sm outline-none focus:border-neutral-700" placeholder="e.g. Author: X" />
-                    <button id="createCollectionBtn" class="rounded-xl bg-neutral-100 text-black px-4 py-3 text-sm font-medium hover:bg-neutral-200 active:scale-[0.99] transition">
+                    <button type="button" id="createCollectionBtn" class="rounded-xl bg-neutral-100 text-black px-5 py-3 text-sm font-semibold hover:bg-white active:scale-[0.99] transition shadow-sm">
                       Create
                     </button>
                   </div>
@@ -300,7 +344,7 @@
                     <div id="collectionItemsTitle" class="text-sm font-medium text-neutral-100"></div>
                     <div id="collectionItemsMeta" class="mt-1 text-xs text-neutral-400"></div>
                   </div>
-                  <button id="collectionItemsCloseBtn" class="rounded-xl border border-neutral-800 bg-neutral-900/20 text-neutral-100/90 px-3 py-2 text-xs hover:bg-neutral-900/35 transition">
+                  <button type="button" id="collectionItemsCloseBtn" class="rounded-md border border-neutral-800 text-neutral-500 px-3 py-1.5 text-xs font-medium hover:border-neutral-600 hover:text-neutral-300 transition">
                     Close
                   </button>
                 </div>
@@ -329,11 +373,11 @@
         <div class="mt-4">
           <div class="text-xs text-neutral-500">Stars</div>
           <div id="starsRow" class="mt-2 flex gap-2">
-            <button type="button" data-star="1" class="starBtn text-neutral-500 hover:text-neutral-200 transition">★</button>
-            <button type="button" data-star="2" class="starBtn text-neutral-500 hover:text-neutral-200 transition">★</button>
-            <button type="button" data-star="3" class="starBtn text-neutral-500 hover:text-neutral-200 transition">★</button>
-            <button type="button" data-star="4" class="starBtn text-neutral-500 hover:text-neutral-200 transition">★</button>
-            <button type="button" data-star="5" class="starBtn text-neutral-500 hover:text-neutral-200 transition">★</button>
+            <button type="button" data-star="1" class="starBtn rounded-md px-1.5 py-0.5 text-lg leading-none text-neutral-500 hover:text-neutral-200 hover:bg-neutral-800/50 transition">★</button>
+            <button type="button" data-star="2" class="starBtn rounded-md px-1.5 py-0.5 text-lg leading-none text-neutral-500 hover:text-neutral-200 hover:bg-neutral-800/50 transition">★</button>
+            <button type="button" data-star="3" class="starBtn rounded-md px-1.5 py-0.5 text-lg leading-none text-neutral-500 hover:text-neutral-200 hover:bg-neutral-800/50 transition">★</button>
+            <button type="button" data-star="4" class="starBtn rounded-md px-1.5 py-0.5 text-lg leading-none text-neutral-500 hover:text-neutral-200 hover:bg-neutral-800/50 transition">★</button>
+            <button type="button" data-star="5" class="starBtn rounded-md px-1.5 py-0.5 text-lg leading-none text-neutral-500 hover:text-neutral-200 hover:bg-neutral-800/50 transition">★</button>
           </div>
           <div id="starsHint" class="mt-1 text-xs text-neutral-500"></div>
         </div>
@@ -345,10 +389,10 @@
         </div>
 
         <div class="mt-5 flex gap-3">
-          <button id="saveFeedbackBtn" class="flex-1 rounded-xl bg-neutral-100 text-black px-4 py-3 text-sm font-medium hover:bg-neutral-200 active:scale-[0.99] transition">
+          <button type="button" id="saveFeedbackBtn" class="flex-1 rounded-xl bg-neutral-100 text-black px-4 py-3 text-sm font-semibold hover:bg-white active:scale-[0.99] transition shadow-sm">
             Save
           </button>
-          <button id="laterFeedbackBtn" class="flex-1 rounded-xl bg-neutral-900/60 border border-neutral-800 text-neutral-100 px-4 py-3 text-sm font-medium hover:bg-neutral-900/80 active:scale-[0.99] transition">
+          <button type="button" id="laterFeedbackBtn" class="flex-1 rounded-xl border border-neutral-600 bg-neutral-800/50 text-neutral-100 px-4 py-3 text-sm font-medium hover:bg-neutral-800/80 active:scale-[0.99] transition">
             Later
           </button>
         </div>
