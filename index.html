@@ -13,7 +13,13 @@
         <div class="max-w-5xl mx-auto flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 sm:gap-6">
           <div>
             <h1 class="text-2xl sm:text-3xl tracking-tight">
-              <span id="logoFallbackText" class="inline-flex items-center gap-0.5 font-semibold">
+              <img
+                src="./logo-custom.png"
+                alt="VocaLog"
+                class="h-8 sm:h-9 w-auto"
+                onerror="this.classList.add('hidden'); document.getElementById('logoFallbackText')?.classList.remove('hidden');"
+              />
+              <span id="logoFallbackText" class="hidden inline-flex items-center gap-0.5 font-semibold">
                 <span>VocaL</span><span class="translate-y-[1px]">♡</span><span>g</span>
               </span>
             </h1>
